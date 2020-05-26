@@ -1,5 +1,6 @@
 #define PIN_NUM 3
 int  data[PIN_NUM]; //data array
+
 char dataID[PIN_NUM] = {'A', 'B', 'C'}; //data label
 int trigPin[PIN_NUM] = {14, 16, 18};
 int echoPin[PIN_NUM] = {13, 15, 17};
@@ -8,6 +9,9 @@ int sampleDuration;
 
 int minDistance = 2; // in cm
 int maxDistance = 100; // in cm
+int maxChange = 100;
+int changeCount[PIN_NUM];
+int maxChangeCount = 3;
 
 long timer = micros();
 void setup() {
@@ -23,9 +27,9 @@ void setup() {
   //duration = maxDistance / speed_of_sound (in seconds)
   //duration = (maxDistance / 100) / 340 (in seconds)
   //duration = (maxDistance / 100) / 340 * 1000000 (in micro seconds)
-  //totalduration = 3*((maxDistance/100)/340*1000000) (in micro seconds)
+  //totalduration = 3*2*((maxDistance/100)/340*1000000) (in micro seconds)
 
-  sampleDuration = 30*maxDistance; // Simplified equation
+  sampleDuration = 65*maxDistance; // Simplified equation
   //sampleRate = 1000000 / (sampleDuration*3); // Sample rate for three sensors
 }
 
@@ -45,8 +49,29 @@ void loop() {
       distance = map(distance, minDistance, maxDistance, 0, 1024);
       distance = constrain(distance, 0, 1024);
 
+      if ((duration != 0) && (distance != 1024)) {
+        if (abs(data[i]-distance) < maxChange) {
+          
+          data[i] = distance;
+          
+          
+        } else {
+          if (changeCount[i] < maxChangeCount) {
+            changeCount[i] += 1;
+          } else {
+            // Now the data can be changed to the new value
+            data[i] = distance;
+            changeCount[i] = 0;
+            
+          }
+          
+        }
+      }
+      /*
+      if (duration != 0) { 
+        data[i] = distance;
+      }*/
       
-      data[i] = distance;
       sendDataToProcessing(dataID[i], data[i]);
       
     }
