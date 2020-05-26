@@ -1,4 +1,3 @@
-
 #define PIN_NUM 3
 int  data[PIN_NUM]; //data array
 char dataID[PIN_NUM] = {'A', 'B', 'C'}; //data label
