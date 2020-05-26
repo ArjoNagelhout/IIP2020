@@ -3,7 +3,8 @@ int  data[PIN_NUM]; //data array
 char dataID[PIN_NUM] = {'A', 'B', 'C'}; //data label
 int trigPin[PIN_NUM] = {14, 16, 18};
 int echoPin[PIN_NUM] = {13, 15, 17};
-int sampleRate = 2000;
+int sampleRate;
+int sampleDuration;
 
 int minDistance = 2; // in cm
 int maxDistance = 100; // in cm
@@ -17,11 +18,20 @@ void setup() {
     pinMode(echoPin[i], INPUT);
 
   }
+
+  //speed_of_sound = 340 m/s
+  //duration = maxDistance / speed_of_sound (in seconds)
+  //duration = (maxDistance / 100) / 340 (in seconds)
+  //duration = (maxDistance / 100) / 340 * 1000000 (in micro seconds)
+  //totalduration = 3*((maxDistance/100)/340*1000000) (in micro seconds)
+
+  sampleDuration = 30*maxDistance; // Simplified equation
+  //sampleRate = 1000000 / (sampleDuration*3); // Sample rate for three sensors
 }
 
 void loop() {
 
-  if (micros() - timer >= 1000000 / sampleRate) {
+  if (micros() - timer >= sampleDuration*PIN_NUM) { // alternative to 1000000 / sampleRate
     timer = micros();
     for (int i = 0 ; i < PIN_NUM ; i++) {
       long duration, distance;
@@ -30,15 +40,15 @@ void loop() {
       digitalWrite(trigPin[i], HIGH);
       delayMicroseconds(10);
       digitalWrite(trigPin[i], LOW);
-      duration = pulseIn(echoPin[i], HIGH);
+      duration = pulseIn(echoPin[i], HIGH, sampleDuration);
       distance = (duration / 2) / 29.1; // Gets the distance in cm
       distance = map(distance, minDistance, maxDistance, 0, 1024);
-      
+      distance = constrain(distance, 0, 1024);
 
-      if ((distance >= 0) && (distance <= 1024)) {
-        data[i] = distance;
-        sendDataToProcessing(dataID[i], data[i]);
-      }
+      
+      data[i] = distance;
+      sendDataToProcessing(dataID[i], data[i]);
+      
     }
   }
 }
