@@ -23,17 +23,21 @@ void loop() {
     timer = micros();
       for (int i = 0 ; i < PIN_NUM ; i++) {
         long duration[i], distance[i];
-  digitalWrite(trigPin[i], LOW);  // Added this line
-  delayMicroseconds(2); // Added this line
+  digitalWrite(trigPin[i], LOW);  
+  delayMicroseconds(2); 
   digitalWrite(trigPin[i], HIGH);
-  delayMicroseconds(10); // Added this line
+  delayMicroseconds(10); 
   digitalWrite(trigPin[i], LOW);
   duration[i] = pulseIn(echoPin[i], HIGH);
   distance[i] = (duration[i]/2) / 29.1;
-//  dataID 
+   if (distance[i] >= 500 || distance[i] <= 0){
+    Serial.println("Out of range");
+   }
+    else{
   data[i]= distance[i];
-delay(100);
+delay(10);
       sendDataToProcessing(dataID[i], data[i]);
+}
 }
 }
 }
