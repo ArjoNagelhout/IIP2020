@@ -8,10 +8,10 @@ int sampleRate;
 int sampleDuration;
 
 int minDistance = 2; // in cm
-int maxDistance = 100; // in cm
+int maxDistance = 50; // in cm
 int maxChange = 100;
 int changeCount[PIN_NUM];
-int maxChangeCount = 3;
+int maxChangeCount = 0;
 
 long timer = micros();
 void setup() {
@@ -49,7 +49,7 @@ void loop() {
       distance = map(distance, minDistance, maxDistance, 0, 1024);
       distance = constrain(distance, 0, 1024);
 
-      if ((duration != 0) && (distance != 1024)) {
+      if (duration != 0) {
         if (abs(data[i]-distance) < maxChange) {
           
           data[i] = distance;
