@@ -6,6 +6,36 @@
 import papaya.*;
 import processing.serial.*;
 Serial port; 
+PImage screenScan;
+PImage screenDelete;
+PImage screenPay;
+PImage screenLongReceipt;
+PImage screenShortReceipt;
+PImage product;
+PImage selectedProduct;
+
+int currentState = 0; 
+int currentProductAmount = 0;
+int maxProductAmount = 3;
+int currentlySelectedProduct = 0;
+int productX = 663;
+int productY = 244;
+int productHeight = 189;
+
+int currentPrediction = 0; // 0 is left, 1 is right and 2 is select
+boolean newIncomingPrediction = false;
+boolean firstTime = true;
+
+/*
+0: scan
+1: delete
+2: pay
+3: long receipt
+4: short receipt
+
+663, 244 locatie product
+189 hoogte product
+*/
 
 int sensorNum = 3; 
 int streamSize = 500;
@@ -16,7 +46,7 @@ float[][] diffArray = new float[sensorNum][streamSize]; //diff calculation: subs
 
 float[] modeArray = new float[streamSize]; //To show activated or not
 float[][] thldArray = new float[sensorNum][streamSize]; //diff calculation: substract
-int activationThld = 55; //The diff threshold of activiation
+int activationThld = 60; //The diff threshold of activiation
 
 int windowSize = 60; //The size of data window
 float[][] windowArray = new float[sensorNum][windowSize]; //data window collection
@@ -40,7 +70,16 @@ float sd_z = -1;
 boolean bShowInfo = true;
 
 void setup() {
-  size(500, 500, P2D);
+  fullScreen(P2D);
+  
+  screenScan = loadImage("zelfscanplein-01.png");
+  screenDelete = loadImage("zelfscanplein-02.png");
+  screenPay = loadImage("zelfscanplein-03.png");
+  screenLongReceipt = loadImage("zelfscanplein-04.png");
+  screenShortReceipt = loadImage("zelfscanplein-05.png");
+  product = loadImage("zelfscanplein-06.png");
+  selectedProduct = loadImage("zelfscanplein-07.png");
+  
   initSerial();
   loadTrainARFF(dataset="DataSetTrain_v2.arff"); //load a ARFF dataset
   trainLinearSVC(C=64);             //train a SV classifier
@@ -51,24 +90,109 @@ void setup() {
 
 void draw() {
   background(255);
-  float[] X = {m_x, sd_x,m_y, sd_y,m_z, sd_z}; 
-  String Y = getPrediction(X);
+  /*
+0: scan
+1: delete
+2: pay
+3: long receipt
+4: short receipt
+
+663, 244 locatie product
+189 hoogte product
+*/
+
+  if (newIncomingPrediction) {
+    
+    
+    // Do all the logic here
+    if (currentState == 0) {
+      // SCAN SCREEN
+      if (currentPrediction == 0) {
+        // LEFT, delete product
+        if (currentProductAmount > 0) {
+          currentState = 1;
+        }
+      } else if (currentPrediction == 2) {
+        // SELECT, checkout
+        currentState = 2;
+      }
+    } else if (currentState == 1) {
+      // DELETE SCREEN
+      if (currentPrediction == 0) {
+        // PREVIOUS
+        if (currentlySelectedProduct > 0) {
+          currentlySelectedProduct -= 1;
+        }
+      } else if (currentPrediction == 1) {
+        // NEXT
+        if (currentlySelectedProduct < currentProductAmount-1) {
+          currentlySelectedProduct += 1;
+        }
+      } else if (currentPrediction == 2) {
+        // ACTUALLY DELETE
+        currentProductAmount -= 1;
+        currentState = 0;
+      }
+    } else if (currentState == 2) {
+      // PAY
+      if (currentPrediction == 0) {
+        // LEFT, korte bon
+        currentState = 4;
+      } else if (currentPrediction == 1) {
+        currentState = 3;
+      }
+    }
+    
+    
+    newIncomingPrediction = false;
+  }
+
+  if (currentState == 0) {
+    image(screenScan, 0, 0);
+  } else if (currentState == 1) {
+    image(screenDelete, 0, 0);
+  } else if (currentState == 2) {
+    image(screenPay, 0, 0);
+  } else if (currentState == 3) {
+    image(screenLongReceipt, 0, 0);
+  } else if (currentState == 4) {
+    image(screenShortReceipt, 0, 0);
+  }
+  
+  if (currentState != 4) {
+    for (int i=0; i<currentProductAmount; i++) {
+      if ((currentlySelectedProduct == i) && (currentState == 1)) {
+        
+        image(selectedProduct, productX, productY+productHeight*i);
+      } else {
+        image(product, productX, productY+productHeight*i);
+      }
+    }
+  }
+  
+
+
+  
   //showInfo("Pred: "+Y,20,20);
   pushStyle();
   fill(0);
   textSize(120);
   textAlign(CENTER, CENTER);
   String display = "";
-  if (Y.equals("A")) {
+  if (currentPrediction == 0) {
     display = "<--";
-  } else if (Y.equals("B")) {
+  } else if (currentPrediction == 1) {
     display = "-->";
-  } else if (Y.equals("C")) {
+  } else if (currentPrediction == 2) {
     display = "SELECT";
   }
-  text(display, width/2, height/2);
+  text(display, width/5, height/2);
   popStyle();
-  for(int n = 0 ; n < X.length; n++) showInfo("["+X[n]+"]",20,(n+2)*20);
+}
+
+void mousePressed() {
+  currentProductAmount = 0;
+  currentState = 0;
 }
 
 void keyPressed() {
@@ -81,6 +205,13 @@ void keyPressed() {
   if (key == 'I' || key == 'i') {
     bShowInfo = (bShowInfo? false:true);
   }
+  if (key == ' ') {
+    // Add product
+    if (currentProductAmount < maxProductAmount) {
+      currentProductAmount += 1;
+    }
+  }
+    
 }
 
 float diff = 0;
@@ -140,7 +271,26 @@ void serialEvent(Serial port) {
         m_z = Descriptive.mean(windowArray[2]); //mean
         sd_z = Descriptive.std(windowArray[2], true); //standard deviation
         b_sampling = false; //stop sampling if the counter is equal to the window size
+        
+        // Now it should get the prediction
+        float[] X = {m_x, sd_x,m_y, sd_y,m_z, sd_z}; 
+        if (firstTime == false) {
+          
+          String currentPredictionString = getPrediction(X);
+          
+          if (currentPredictionString.equals("A")) {
+            currentPrediction = 0;
+          } else if (currentPredictionString.equals("B")) {
+            currentPrediction = 1;
+          } else if (currentPredictionString.equals("C")) {
+            currentPrediction = 2;
+          }
+          newIncomingPrediction = true;
+        } else {
+          firstTime = false;
+        }
       }
+      
     }
   }
   return;
