@@ -1,29 +1,29 @@
 # IIP2020
 Interactive Intelligent Products
 
-##Midterm project - Self-checkout gesture based interface for supermarkets
+## Midterm project - Self-checkout gesture based interface for supermarkets
 
 [![Project demonstration on YouTube](https://img.youtube.com/vi/2WeqEVaqhww/0.jpg)](https://www.youtube.com/watch?v=2WeqEVaqhww)
 
-###Progress
 
-1. Data acquisition, collection of training data
-We use three ultrasonic sensors. With these we can measure distance. We set a minimum and maximum distance to filter out unwanted movements. The sampleRate gets calculated based on the maximum distance, due to the speed of sound. 
+### 1. Data acquisition
 
-In Processing, we collect the data using the "DataCollection" sketch. In this we set a segmentation threshold and a window size. The incoming data is turned into a separate differential signal. If the intensity of this signal meets the segmentation threshold it will start recording data for the selected label ("A", "B" or "C"). 
+We use three ultrasonic sensors. With these we can measure distance. We set a minimum and maximum distance to filter out unwanted movements. The sampleRate gets calculated based on the maximum distance, due to the speed of sound. In Processing, we collect the data using the "DataCollection" sketch. In this we set a segmentation threshold and a window size. The incoming data is turned into a separate differential signal. If the intensity of this signal meets the segmentation threshold it will start recording data for the selected label ("A", "B" or "C"). 
 
-2. Model training
+### Model training
+
 The model is trained with a linear support vector classifier (LSVC) with an initial C parameter of 64. It has a in-sample CV accuracy of 100%. 
 
-3. Model optimisation
+### Model optimisation
+
 To increase performance of our model we need to:
 Perform grid-search to see if we can lower C, which could on its turn reduce the change for overfitting and reduce the amount of out-of-sample errors. 
 Use another classifier, such as k-nearest neighbours classifiers or kernel support vector classifier. 
 
-4. Evaluation
+### Evaluation
 To allow for better evaluation than anecdotal evidence, we should use the train-test split method. Then we can get a more accurate reading (CV accuracy) of how well our model performs. 
 
-Future points of action:
+### Learning points + Future points of action
 - Use train-test split method to evaluate model
 - Do grid search to allow for parameter optimisation
 - Try out other classifiers such as KNN
