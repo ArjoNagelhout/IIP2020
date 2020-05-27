@@ -10,17 +10,17 @@ Interactive Intelligent Products
 
 We use three ultrasonic sensors. With these we can measure distance. We set a minimum and maximum distance to filter out unwanted movements. The sampleRate gets calculated based on the maximum distance, due to the speed of sound. In Processing, we collect the data using the "DataCollection" sketch. In this we set a segmentation threshold and a window size. The incoming data is turned into a separate differential signal. If the intensity of this signal meets the segmentation threshold it will start recording data for the selected label ("A", "B" or "C"). 
 
-### Model training
+### 2. Model training
 
 The model is trained with a linear support vector classifier (LSVC) with an initial C parameter of 64. It has a in-sample CV accuracy of 100%. 
 
-### Model optimisation
+### 3. Model optimisation
 
 To increase performance of our model we need to:
 Perform grid-search to see if we can lower C, which could on its turn reduce the change for overfitting and reduce the amount of out-of-sample errors. 
 Use another classifier, such as k-nearest neighbours classifiers or kernel support vector classifier. 
 
-### Evaluation
+### 4. Evaluation
 To allow for better evaluation than anecdotal evidence, we should use the train-test split method. Then we can get a more accurate reading (CV accuracy) of how well our model performs. 
 
 ### Learning points + Future points of action
