@@ -33,3 +33,9 @@ To allow for better evaluation than anecdotal evidence, we should use the train-
 - More useful feature extraction (direction of movement is hard to tell by extracting only the mean and standard deviation). Maybe do a linear regression on the time-series and store it as a feature (angle of data)
 
 All of these measures should allow for a more generalisable model. Right now it can be used correctly by performing a specific motion, but it would be ideal that it could detect a hand moving in different ways (fast, slow, independent on positioning). 
+
+5x model getraind wel maar 1 participant dus 5 verschillende poses, zittend staand snel langzaam linkerhand rechterhand dat een beetje afgewisseld 
+De getrainde data ingeladen in ModelTrainEvaluation
+
+Moeten we de C nog testen?
+Geprobeerd mete4_2c_A0CSearchLSVC maar deze werkt niet met de data daar komt nullpointerexeption uit? zie drive voor resultaten. 

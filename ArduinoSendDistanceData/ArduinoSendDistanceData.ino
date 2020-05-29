@@ -2,8 +2,8 @@
 int  data[PIN_NUM]; //data array
 
 char dataID[PIN_NUM] = {'A', 'B', 'C'}; //data label
-int trigPin[PIN_NUM] = {14, 16, 18};
-int echoPin[PIN_NUM] = {13, 15, 17};
+int trigPin[PIN_NUM] = {2,6,9};
+int echoPin[PIN_NUM] = {3,7,10};
 int sampleRate;
 int sampleDuration;
 
