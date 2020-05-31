@@ -1,7 +1,15 @@
 //*********************************************
-// Example Code for Interactive Intelligent Products
-// Rong-Hao Liang: r.liang@tue.nl
+
+// Group 12
+//Jesper Kapteijns
+//Jeanine de Leeuw
+//Arjo Nagelhout
+//Danvy Vũ
+
+// Course Interactive Intelligent Products
+// Professor: Rong-Hao Liang: r.liang@tue.nl
 //*********************************************
+
 double[] CArray = {1, 2, 4, 8, 16, 32, 64, 128, 256};
 boolean showModelOnly = false;
 

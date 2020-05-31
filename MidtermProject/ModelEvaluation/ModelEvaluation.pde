@@ -1,6 +1,13 @@
 //*********************************************
-// Example Code for Interactive Intelligent Products
-// Rong-Hao Liang: r.liang@tue.nl
+
+// Group 12
+//Jesper Kapteijns
+//Jeanine de Leeuw
+//Arjo Nagelhout
+//Danvy Vũ
+
+// Course Interactive Intelligent Products
+// Professor: Rong-Hao Liang: r.liang@tue.nl
 //*********************************************
 
 void setup() {
