@@ -7,7 +7,7 @@
 //Danvy Vũ
 
 // Course Interactive Intelligent Products
-// Professor: Rong-Hao Liang: r.liang@tue.nl
+// Code from professor: Rong-Hao Liang: r.liang@tue.nl
 //*********************************************
 
 double[] CArray = {1, 2, 4, 8, 16, 32, 64, 128, 256};

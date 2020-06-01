@@ -1,3 +1,4 @@
+//Code based on the example of PranaliDesai December 2, 2016
 #define PIN_NUM 3
 int  data[PIN_NUM]; //data array
 

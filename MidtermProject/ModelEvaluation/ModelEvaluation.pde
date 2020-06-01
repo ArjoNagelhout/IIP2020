@@ -7,7 +7,7 @@
 //Danvy Vũ
 
 // Course Interactive Intelligent Products
-// Professor: Rong-Hao Liang: r.liang@tue.nl
+// Code from professor: Rong-Hao Liang: r.liang@tue.nl
 //*********************************************
 
 void setup() {
