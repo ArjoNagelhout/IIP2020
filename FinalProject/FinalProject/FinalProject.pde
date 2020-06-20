@@ -9,8 +9,11 @@
 // https://github.com/shiffman/OpenKinect-for-Processing
 // http://shiffman.net/p5/kinect/
 
+import papaya.*;
 import org.openkinect.freenect.*;
 import org.openkinect.processing.*;
+
+
 
 
 // Kinect Library object
@@ -26,9 +29,46 @@ boolean showImage = true;
 boolean coloredPixels = true;
 boolean renderPixels = true;
 boolean debugInfo = true;
-boolean showTopScreen = true;
-boolean showBottomScreen = true;
 PImage colorImage;
+
+float factor = 200;
+
+String action = "callibrate";
+/*
+"callibrate"
+"collect_data"
+"train_model"
+
+*/
+
+int sensorNum = 3; 
+int streamSize = 500;
+int[] rawData = new int[sensorNum];
+float[][] sensorHist = new float[sensorNum][streamSize]; //history data to show
+
+float[][] diffArray = new float[sensorNum][streamSize]; //diff calculation: substract
+
+float[] modeArray = new float[streamSize]; //To show activated or not
+float[][] thldArray = new float[sensorNum][streamSize]; //diff calculation: substract
+int activationThld = 20; //The diff threshold of activiation
+
+int windowSize = 20; //The size of data window
+float[][] windowArray = new float[sensorNum][windowSize]; //data window collection
+boolean b_sampling = false; //flag to keep data collection non-preemptive
+int sampleCnt = 0; //counter of samples
+
+//Statistical Features
+float[] windowM = new float[sensorNum]; //mean
+float[] windowSD = new float[sensorNum]; //standard deviation
+
+Table csvData;
+boolean b_saveCSV = false;
+String dataSetName = "ArjoTrain"; 
+String[] attrNames = new String[]{"m_x", "sd_x", "label"};
+boolean[] attrIsNominal = new boolean[]{false, false, true};
+int labelIndex = 0;
+
+
 
 // We'll use a lookup table so that we don't have to repeat the math over and over
 float[] depthLookUp = new float[2048];
@@ -82,6 +122,8 @@ void setup() {
   for (int i = 0; i < depthLookUp.length; i++) {
     depthLookUp[i] = rawDepthToMeters(i);
   }
+  
+  initCSV();
   
 }
 
@@ -193,8 +235,100 @@ void draw() {
   if (!productColors.pickColors) {
     parameterList.update();
   }
+  
+  pushStyle();
+  fill(255);
+  textSize(30);
+  text(action, width/2, height/2);
+  popStyle();
+  
+  if (action == "collect_data" || action == "train_model") {
+    lineGraph(sensorHist[0], 0, 500, 0, 0, width, height/3, 0); //draw sensor stream
+    lineGraph(diffArray[0], 0, 500, 0, height/3, width, height/3, 1); //history of signal
+    lineGraph(thldArray[0], 0, 500, 0, height/3, width, height/3, 2); //history of signal
+    barGraph (modeArray, 0, height/3, width, height/3);
+    showInfo("Thld: "+activationThld, 20, 2*height/3-20);
+    showInfo("([A]:+/[Z]:-)", 20, 2*height/3);
+    lineGraph(windowArray[0], 0, 1023, 0, 2*height/3, width, height/3, 3); //history of window
+    showInfo("M: "+nf(windowM[0], 0, 2), 20, 2*height/3-60);
+    showInfo("SD: "+nf(windowSD[0], 0, 2), 20, 2*height/3-40);
+    showInfo("Current Label: "+getCharFromInteger(labelIndex), 20, 20);
+    showInfo("Num of Data: "+csvData.getRowCount(), 20, 40);
+    showInfo("[X]:del/[C]:clear/[S]:save", 20, 60);
+    showInfo("[/]:label+", 20, 80);
+  }
+  if (b_saveCSV) {
+    saveCSV(dataSetName, csvData);
+    saveARFF(dataSetName, csvData);
+    b_saveCSV = false;
+  }
+  
+  
 
   productColors.render();
+  
+}
+
+
+void newData() {   
+  
+  float diff = 0;
+  
+  Product p = products.get(0);
+  
+  rawData[0] = int(p.currentX*factor);
+  appendArray( (sensorHist[0]), rawData[0]); //store the data to history (for visualization)
+  diff = max(abs( (sensorHist[0])[0] - (sensorHist[0])[1]), diff); //absolute diff
+  appendArray(diffArray[0], diff);
+  appendArray(thldArray[0], activationThld);
+  
+  rawData[1] = int(p.currentY*factor);
+  appendArray( (sensorHist[1]), rawData[1]); //store the data to history (for visualization)
+  diff = max(abs( (sensorHist[1])[0] - (sensorHist[1])[1]), diff); //absolute diff
+  appendArray(diffArray[1], diff);
+  appendArray(thldArray[1], activationThld);
+  
+  rawData[2] = int(p.currentZ*factor);
+  appendArray( (sensorHist[2]), rawData[2]); //store the data to history (for visualization)
+  diff = max(abs( (sensorHist[2])[0] - (sensorHist[2])[1]), diff); //absolute diff
+  appendArray(diffArray[2], diff);
+  appendArray(thldArray[2], activationThld);
+  
+  //test activation threshold
+  if (diff>activationThld) {
+    appendArray(modeArray, 2); //activate when the absolute diff is beyond the activationThld
+    if (b_sampling == false) { //if not sampling
+      b_sampling = true; //do sampling
+      sampleCnt = 0; //reset the counter
+      for (int i = 0; i < sensorNum; i++) {
+        for (int j = 0; j < windowSize; j++) {
+          (windowArray[i])[j] = 0; //reset the window
+        }
+      }
+    }
+  } else { 
+    if (b_sampling == true) {
+      appendArray(modeArray, 3);
+    } else {
+      appendArray(modeArray, -1); 
+    }
+  }
+
+  if (b_sampling == true) {
+    appendArray(windowArray[0], rawData[0]); //store the windowed data to history (for visualization)
+    ++sampleCnt;
+    if (sampleCnt == windowSize) {
+      windowM[0] = Descriptive.mean(windowArray[0]); //mean
+      windowSD[0] = Descriptive.std(windowArray[0], true); //standard deviation
+      TableRow newRow = csvData.addRow();
+      newRow.setFloat("m_x", windowM[0]);
+      newRow.setFloat("sd_x", windowSD[0]);
+      newRow.setString("label", getCharFromInteger(labelIndex));
+      println(csvData.getRowCount());
+      b_sampling = false; //stop sampling if the counter is equal to the window size
+    }
+  }
+  return;
 }
 
 
@@ -250,20 +384,51 @@ void keyPressed() {
   if (key == 'I' || key == 'i') {
     showImage = !showImage;
   }
-  if (key == 'C' || key == 'c') {
+  if (key == 'O' || key == 'o') {
     coloredPixels = !coloredPixels;
   }
   if (key == 'R' || key == 'r') {
     renderPixels = !renderPixels;
   }
   if (key == '1') {
-    showTopScreen = !showTopScreen;
+    // Collect data
+    action = "callibrate";
+
   }
   if (key == '2') {
-    showBottomScreen = !showBottomScreen;
+    // Train model
+    action = "collect_data";
+  }
+  if (key == '3') {
+    action = "train_model";
+    // 
   }
   if (key == 'D' || key == 'd') {
     debugInfo = !debugInfo;
+  }
+  
+  if (key == 'A' || key == 'a') {
+    activationThld = min(activationThld+5, 100);
+  }
+  if (key == 'Z' || key == 'z') {
+    activationThld = max(activationThld-5, 10);
+  }
+  if (key == 'C' || key == 'c') {
+    csvData.clearRows();
+    println(csvData.getRowCount());
+  }
+  if (key == 'X' || key == 'x') {
+    csvData.removeRow(csvData.getRowCount()-1);
+  }
+  if (key == 'S' || key == 's') {
+    b_saveCSV = true;
+  }
+  if (key == '/') {
+    ++labelIndex;
+    labelIndex %= 10;
+  }
+  if (key == '0') {
+    labelIndex = 0;
   }
 }
 
@@ -277,4 +442,14 @@ float floatParameter(String name) {
 
 Parameter getParameter(String name) {
   return parameterList.parameters.get(parameterList.indexes.get(name));
+}
+
+//Append a value to a float[] array.
+float[] appendArray (float[] _array, float _val) {
+  float[] array = _array;
+  float[] tempArray = new float[_array.length-1];
+  arrayCopy(array, tempArray, tempArray.length);
+  array[0] = _val;
+  arrayCopy(tempArray, 0, array, 1, tempArray.length);
+  return array;
 }

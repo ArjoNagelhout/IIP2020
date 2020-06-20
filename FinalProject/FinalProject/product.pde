@@ -24,7 +24,6 @@ class Product {
     
     pushMatrix();
     // Scale up by 200
-    float factor = 200;
     translate(currentX*factor, currentY*factor, factor-currentZ*factor);
     if (debugInfo) {
       fill(c);
