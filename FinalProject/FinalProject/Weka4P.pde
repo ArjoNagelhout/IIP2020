@@ -696,7 +696,7 @@ void CSearchLinear(double[] _CList) {
     trainLinearSVC(C=_CList[c]);
     evaluateTrainSet(fold=5, isRegression=false, showEvalDetails=false);        //5-fold cross validation
     setModelDrawing(unit=ceil(sqrt(_CList.length))*2);         //set the model visualization (for 2D features)
-    modelImageGrid[c][0] = pg.get();
+    modelImageGrid[c][0] = createGraphics(100, 100);//pg.get();
     accuracyGrid[c][0] = accuracyTrain;
     println(fold+"-fold CV Accuracy:", nf((float)accuracyTrain, 0, 2), "%\n");
   }
@@ -712,8 +712,8 @@ void drawCSearchModels(float x, float y, float w, float h) {
     float X = c%N*W;
     float Y = floor(c/N)*W;
     PImage p = modelImageGrid[c][0];
-    p.resize((int)W, (int)W);
-    image(p, X, Y);
+    //p.resize((int)W, (int)W);
+    //image(p, X, Y);
   }
   popStyle();
   popMatrix();

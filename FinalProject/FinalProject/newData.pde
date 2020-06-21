@@ -190,6 +190,9 @@ void newData() {
       
       if (action == "demo") {
         // GET PREDICTION
+        
+        
+        
       } else {
         
         // STORE IN CSV
