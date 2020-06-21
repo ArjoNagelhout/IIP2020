@@ -91,6 +91,10 @@ void keyPressed() {
       print("You need to select a color\n");
     }
   }
+  if (key == '5') {
+    actionChange = true;
+    action = "evaluation";
+  }
   
   
   if (key == 'D' || key == 'd') {

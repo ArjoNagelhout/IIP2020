@@ -1,3 +1,32 @@
+void drawEvaluation() {
+  pushStyle();
+    
+  pg_info.beginDraw();
+  pg_info.background(0);
+  pg_info.textFont(monospace);
+  
+  pg_info.textSize(20);
+  pg_info.fill(255);
+  pg_info.textAlign(RIGHT, TOP);
+  pg_info.text("Currently evaluated model: "+modelName+"\n", width, 0);
+  pg_info.text("From train dataset: "+dataSetName+".arff\n", width, 40);
+  pg_info.text("And test dataset: "+testDataSetName+".arff\n", width, 80);
+  pg_info.textSize(10);
+  pg_info.textAlign(LEFT);
+  try {
+    String str = eval.toSummaryString("\nResults\n======\n", false);
+    str += eval.toMatrixString();
+    str += eval.toClassDetailsString();
+    pg_info.text(str, 0, 0);
+  } catch(java.lang.Exception e) {
+    println(e);
+  }
+  pg_info.endDraw();
+  popStyle();
+  
+  image(pg_info, 0,0);
+}
+
 void drawCSearch() {
   pushStyle();
     
@@ -53,10 +82,10 @@ void drawCollectionInfo() {
   showInfo("slope_y: "+windowSlope[1], 20, 2*height/3-60);
   showInfo("slope_z: "+windowSlope[2], 20, 2*height/3-40);
   
-  showInfo("Current Label: "+getCharFromInteger(labelIndex), 20, 20);
-  showInfo("Num of Data: "+csvData.getRowCount(), 20, 40);
-  showInfo("[X]:del/[C]:clear/[S]:save", 20, 60);
-  showInfo("[/]:label+", 20, 80);
+  showInfo("Current Label: "+getCharFromInteger(labelIndex), 20, 20+60);
+  showInfo("Num of Data: "+csvData.getRowCount(), 20, 40+60);
+  showInfo("[X]:del/[C]:clear/[S]:save", 20, 60+60);
+  showInfo("[/]:label+", 20, 80+60);
   
   
   // Draw the linear regressions

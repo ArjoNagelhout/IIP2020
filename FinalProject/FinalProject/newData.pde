@@ -196,9 +196,9 @@ void newData() {
           String currentPredictionString = getPrediction(X);
           
           if (currentPredictionString.equals("A")) {
-            currentPrediction = 0;
-          } else if (currentPredictionString.equals("B")) {
             currentPrediction = 1;
+          } else if (currentPredictionString.equals("B")) {
+            currentPrediction = 0;
           } else if (currentPredictionString.equals("C")) {
             currentPrediction = 2;
           }

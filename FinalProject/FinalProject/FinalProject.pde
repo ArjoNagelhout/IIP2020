@@ -42,7 +42,7 @@ boolean actionChange = true;
 "collect_data"
 "train_model"
 "demo"
-
+"evaluation"
 */
 
 int sensorNum = 3; 
@@ -68,6 +68,8 @@ String dataSetName = "ArjoTrain";
 String[] attrNames = new String[]{"slope_x", "slope_y", "slope_z", "label"};
 boolean[] attrIsNominal = new boolean[]{false, false, false, true};
 int labelIndex = 0;
+
+String testDataSetName = "ArjoTest";
 
 // MODEL TRAINING
 String modelName = "LinearSVC.model";
@@ -146,6 +148,16 @@ void draw() {
     productColors.render();
     drawCurrentAction();
     
+    pushStyle();
+    
+    textAlign(LEFT, TOP);
+    textSize(40);
+    fill(255);
+    
+    text("Saving to: "+dataSetName+".arff", 10, 10);
+    
+    popStyle();
+    
     if (b_saveCSV) {
       saveTable(csvData, "data/"+dataSetName+".csv");
       saveARFF(csvData, dataSetName);
@@ -190,6 +202,24 @@ void draw() {
     demoDraw();
     //drawCollectionInfo();
     //productColors.render();
+    
+  } else if (action == "evaluation") {
+    if (actionChange) {
+      
+      loadTrainARFF(dataset=dataSetName+".arff");//load a ARFF dataset
+      loadTestARFF(dataset=testDataSetName+".arff");//load a ARFF dataset
+      
+      loadModel(model=modelName); //load a pretrained model.
+      setModelDrawing(unit=2);          //set the model visualization (for 2D features)
+      evaluateTestSet(isRegression = false, showEvalDetails=true);  //5-fold cross validation
+      
+      actionChange = false;
+    }
+    
+    drawEvaluation();
+    
+    drawCurrentAction();
+    
     
   }
 }

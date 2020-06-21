@@ -18,6 +18,8 @@ int currentPrediction = 0; // 0 is left, 1 is right and 2 is select
 boolean newIncomingPrediction = false;
 boolean firstTime = true;
 
+float currentScale;
+
 /*
 0: scan
 1: delete
@@ -40,7 +42,14 @@ void demoSetup() {
 }
 
 void demoDraw() {
+  
+  if (currentScale > 0.3) {
+    currentScale -= 0.1;
+  }
+  
   if (newIncomingPrediction) {
+    
+    currentScale = 2;
     
     
     // Do all the logic here
@@ -114,6 +123,9 @@ void demoDraw() {
   
   //showInfo("Pred: "+Y,20,20);
   pushStyle();
+  pushMatrix();
+  translate(width/5, height/2);
+  scale(currentScale);
   fill(0);
   textSize(120);
   textAlign(CENTER, CENTER);
@@ -125,6 +137,7 @@ void demoDraw() {
   } else if (currentPrediction == 2) {
     display = "SELECT";
   }
-  text(display, width/5, height/2);
+  text(display, 0, 0);
+  popMatrix();
   popStyle();
 }
