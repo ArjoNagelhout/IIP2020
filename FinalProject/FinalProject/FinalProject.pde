@@ -52,7 +52,7 @@ float[][] diffArray = new float[sensorNum][streamSize]; //diff calculation: subs
 
 float[] modeArray = new float[streamSize]; //To show activated or not
 float[][] thldArray = new float[sensorNum][streamSize]; //diff calculation: substract
-int activationThld = 10; //The diff threshold of activiation
+int activationThld = 6; //The diff threshold of activiation
 
 int windowSize = 20; //The size of data window
 float[][] windowArray = new float[sensorNum][windowSize]; //data window collection
@@ -87,6 +87,9 @@ int label = 0;
 LinearRegression lReg;
 Instances training;
 ArrayList<Attribute> attributes;
+
+float[] sensorMin = new float[sensorNum];
+float[] sensorMax = new float[sensorNum];
 
 
 void setup() {
@@ -304,10 +307,10 @@ void draw() {
     // Draw the linear regressions
     for (int c = 0; c < sensorNum; c++) { 
       if (pg2[c] != null) {
-        image(pg2[c], c*(width/3), height-(height/3));
+        image(pg2[c], c*(width/sensorNum), height-(height/3));
       }
       pushMatrix();
-      translate(c*(width/3), height-(height/3));
+      translate(c*(width/sensorNum), height-(height/3));
       
       pushStyle();
       stroke(255, 0, 0);
@@ -315,12 +318,12 @@ void draw() {
       
       int _sampleCount = tempCSV[c].getRowCount();
       if (_sampleCount > 0) {
-        int xMultiplier = (width/3)/_sampleCount;
+        int xMultiplier = (width/sensorNum)/_sampleCount;
         
         for (int i = 0; i < _sampleCount; i++) { 
           TableRow tableRow = tempCSV[c].getRow(i);
           
-          point(tableRow.getInt("index") * xMultiplier, tableRow.getFloat("value"));
+          point(tableRow.getInt("index") * xMultiplier, map(tableRow.getFloat("value"), sensorMin[c], sensorMax[c], 0, height/3));
         }
       }
       
@@ -400,13 +403,22 @@ void newData() {
         
         tempCSV[c].clearRows();
         
+        sensorMin[c] = 1000;
+        sensorMax[c] = -1000;
+        
+        
         // Populate the table
         for (int i = 0; i < sampleCnt; i++) {
           TableRow newRow = tempCSV[c].addRow();
           newRow.setInt("index", i);
-          newRow.setFloat("value", windowArray[c][i]);
+          float newValue = windowArray[c][i];
+          newRow.setFloat("value", newValue);
+          sensorMin[c] = min(sensorMin[c], newValue);
+          sensorMax[c] = max(sensorMax[c], newValue);
           
         }
+        
+        
         
         saveCSV(tempCSV[c], "data/tempCSV_"+c+".csv");
         
