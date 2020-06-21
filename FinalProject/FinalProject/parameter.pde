@@ -1,6 +1,6 @@
 class ParameterList {
   
-  float animationSpeed = 0.1;
+  float animationSpeed = 0.3;
   
   float currentX, minX, maxX;
   boolean offScreen;
@@ -38,8 +38,10 @@ class ParameterList {
     pushMatrix();
     translate(currentX, 0);
     
-    for (Parameter parameter : parameters) {
-      parameter.update();
+    if (!(targetX-currentX<0.1 && offScreen == true)) {
+      for (Parameter parameter : parameters) {
+        parameter.update();
+      }
     }
     popMatrix();
   }

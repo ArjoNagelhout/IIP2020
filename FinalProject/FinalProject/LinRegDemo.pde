@@ -1,21 +1,11 @@
-Table tempCSV;
-String fileName = "data/testData.csv";
-boolean b_savetempCSV = false;
-boolean b_train = false;
-boolean b_test = false;
-PGraphics[] pg2 = new PGraphics[sensorNum];
 
-int label = 0;
-LinearRegression lReg;
-Instances training;
-ArrayList<Attribute> attributes;
-
+/*
 void initDemo() {
   //Initiate the dataList and set the header of table
   tempCSV = new Table();
   tempCSV.addColumn("t");
   tempCSV.addColumn("value");
-}
+}*/
 
 void modelEvaluation(int sensor) {
   try {
@@ -71,15 +61,15 @@ void saveCSV(Table csvData, String fileName) {
   b_saveCSV = false;
 }
 
-void drawCSVData() {
-  for (int i = 0; i < csvData.getRowCount(); i++) { 
+void drawCSVData(Table _csvData) {
+  for (int i = 0; i < _csvData.getRowCount(); i++) { 
     //read the values from the file
-    TableRow row = csvData.getRow(i);
-    float x = row.getFloat("x");
-    int index = (int) row.getFloat("y");
+    TableRow row = _csvData.getRow(i);
+    int index = row.getInt("index");
+    float value = row.getFloat("value");
 
     //form a feature array
-    float[] features = {x};
+    float[] features = {value};
 
     //draw the data on the Canvas
     drawDataMono(index, features);
@@ -149,12 +139,13 @@ void drawDataMono(int _index, float[] _features) {
   textAlign(CENTER, CENTER);
 
   stroke(0);
+  strokeWeight(0.1);
   fill(255);
-  ellipse(_features[0], _index, 20, 20);
+  ellipse(_features[0], _index, 2, 2);
 
   noStroke();
   fill(0);
-  text(_index, _features[0], _index);
+  //text(_index, _features[0], _index);
 
   popStyle();
 }
@@ -195,7 +186,7 @@ void initTrainingSet(Table _csvData, int _featureNum) {
   for (int i = 0; i < _csvData.getRowCount(); i++) {
     //// Add training data
     Instance inst = new DenseInstance(_featureNum);
-    TableRow row = csvData.getRow(i);
+    TableRow row = _csvData.getRow(i);
     for (int j = 0; j< _featureNum; j++) {
       inst.setValue(attributes.get(j), row.getFloat(attrStr[j]));
     }

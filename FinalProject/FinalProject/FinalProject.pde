@@ -25,8 +25,8 @@ ProductColors productColors;
 
 ArrayList<Product> products;
 
-boolean showImage = true;
-boolean coloredPixels = true;
+boolean showImage = false;
+boolean coloredPixels = false;
 boolean renderPixels = true;
 boolean debugInfo = true;
 PImage colorImage;
@@ -52,7 +52,7 @@ float[][] diffArray = new float[sensorNum][streamSize]; //diff calculation: subs
 
 float[] modeArray = new float[streamSize]; //To show activated or not
 float[][] thldArray = new float[sensorNum][streamSize]; //diff calculation: substract
-int activationThld = 20; //The diff threshold of activiation
+int activationThld = 10; //The diff threshold of activiation
 
 int windowSize = 20; //The size of data window
 float[][] windowArray = new float[sensorNum][windowSize]; //data window collection
@@ -76,12 +76,39 @@ int labelIndex = 0;
 float[] depthLookUp = new float[2048];
 
 
+Table[] tempCSV = new Table[sensorNum];
+String fileName = "data/testData.csv";
+boolean b_savetempCSV = false;
+boolean b_train = false;
+boolean b_test = false;
+PGraphics[] pg2 = new PGraphics[sensorNum];
+
+int label = 0;
+LinearRegression lReg;
+Instances training;
+ArrayList<Attribute> attributes;
+
+
 void setup() {
   size(1200, 600, P3D);
   
   for (int c = 0; c < sensorNum; c++) {
     pg2[c] = createGraphics(width/sensorNum, height/3);
+    pg2[c].beginDraw();
+    pg2[c].background(200);
+    pg2[c].endDraw();
+    
+    // Create a new table
+    tempCSV[c] = new Table();
+    tempCSV[c].addColumn("index");
+    tempCSV[c].addColumn("value");
+    
+    saveCSV(tempCSV[c], "data/tempCSV_"+c+".csv");
+    
+    print(c);
   }
+  
+  
   
   //fullScreen(P3D);
   kinect = new Kinect(this);
@@ -119,7 +146,7 @@ void setup() {
   parameters.add(new FloatParameter("panWidth", 10, 400, 267, h+=offset));
   parameters.add(new IntParameter("informationOffsetX", -400, 400, 282, h+=offset));
   parameters.add(new IntParameter("informationOffsetY", -400, 400, 248, h+=offset));
-  parameters.add(new IntParameter("panHeight", 0, 500, 280, h+=offset));
+  parameters.add(new IntParameter("panHeight", 0, 500, 280, h+=offset)); 
   
   parameterList = new ParameterList(parameters, 400);
   productColors = new ProductColors();
@@ -275,8 +302,30 @@ void draw() {
     
     
     // Draw the linear regressions
-    for (int c = 0; c < sensorNum; c++) {
-      image(pg2[c], c*(width/3), height-(height/3));
+    for (int c = 0; c < sensorNum; c++) { 
+      if (pg2[c] != null) {
+        image(pg2[c], c*(width/3), height-(height/3));
+      }
+      pushMatrix();
+      translate(c*(width/3), height-(height/3));
+      
+      pushStyle();
+      stroke(255, 0, 0);
+      strokeWeight(5);
+      
+      int _sampleCount = tempCSV[c].getRowCount();
+      if (_sampleCount > 0) {
+        int xMultiplier = (width/3)/_sampleCount;
+        
+        for (int i = 0; i < _sampleCount; i++) { 
+          TableRow tableRow = tempCSV[c].getRow(i);
+          
+          point(tableRow.getInt("index") * xMultiplier, tableRow.getFloat("value"));
+        }
+      }
+      
+      popMatrix();
+      popStyle();
     }
   }
   if (b_saveCSV) {
@@ -349,12 +398,20 @@ void newData() {
         
         // Perform linear regression for each time series data 
         
-        tempCSV = new Table();
-        tempCSV.addColumn("index");
-        tempCSV.addColumn("value");
+        tempCSV[c].clearRows();
+        
+        // Populate the table
+        for (int i = 0; i < sampleCnt; i++) {
+          TableRow newRow = tempCSV[c].addRow();
+          newRow.setInt("index", i);
+          newRow.setFloat("value", windowArray[c][i]);
+          
+        }
+        
+        saveCSV(tempCSV[c], "data/tempCSV_"+c+".csv");
         
         try {
-          initTrainingSet(tempCSV, 2); // in Weka.pde
+          initTrainingSet(tempCSV[c], 2); // in Weka.pde
           lReg = new LinearRegression();
           lReg.buildClassifier(training);
           modelEvaluation(c);
@@ -362,13 +419,7 @@ void newData() {
         catch (Exception e) {
           e.printStackTrace();
         }
-        
-        
-        
       }
-      
-      
-      
       
       windowM[0] = Descriptive.mean(windowArray[0]); //mean
       windowSD[0] = Descriptive.std(windowArray[0], true); //standard deviation
