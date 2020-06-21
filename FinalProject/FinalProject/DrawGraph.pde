@@ -3,7 +3,7 @@
 void showInfo(String s, float x, float y) { 
   pushStyle();
   textAlign(LEFT,TOP);
-  fill(0);
+  fill(255);
   textSize(20);
   text(s, x, y);
   popStyle();

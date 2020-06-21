@@ -32,6 +32,8 @@ boolean debugInfo = true;
 PImage colorImage;
 
 float factor = 200;
+boolean lostTracking = true;
+boolean canLoseTracking = false;
 
 String action = "callibrate";
 /*
@@ -77,6 +79,10 @@ float[] depthLookUp = new float[2048];
 void setup() {
   size(1200, 600, P3D);
   
+  for (int c = 0; c < sensorNum; c++) {
+    pg2[c] = createGraphics(width/sensorNum, height/3);
+  }
+  
   //fullScreen(P3D);
   kinect = new Kinect(this);
   
@@ -93,7 +99,7 @@ void setup() {
   int offset = 20;
 
   parameters.add(new IntParameter("minDepth", 0, 2048, 0, h+=offset));
-  parameters.add(new IntParameter("maxDepth", 0, 2048, 835, h+=offset));
+  parameters.add(new IntParameter("maxDepth", 0, 2048, 716, h+=offset));
   parameters.add(new IntParameter("minW", 0, kinect.width, 0, h+=offset));
   parameters.add(new IntParameter("maxW", 0, kinect.width, kinect.width, h+=offset));
   parameters.add(new IntParameter("minH", 0, kinect.height, 0, h+=offset));
@@ -106,9 +112,9 @@ void setup() {
   parameters.add(new IntParameter("xColorOffset", -100, 100, 40, h+=offset));
   parameters.add(new IntParameter("yColorOffset", -100, 100, -14, h+=offset));
   parameters.add(new FloatParameter("maxColorDifference", 0, 300, 23, h+=offset));
-  parameters.add(new IntParameter("minColors", 0, 100, 13, h+=offset));
+  parameters.add(new IntParameter("minColors", 0, 100, 15, h+=offset));
   parameters.add(new FloatParameter("productSize", 1, 50, 3, h+=offset));
-  parameters.add(new FloatParameter("lerpSpeed", 0.01, 1, 0.22, h+=offset));
+  parameters.add(new FloatParameter("lerpSpeed", 0.01, 1, 0.9, h+=offset));
   parameters.add(new IntParameter("dangerHeight", 10, 300, 100, h+=offset));
   parameters.add(new FloatParameter("panWidth", 10, 400, 267, h+=offset));
   parameters.add(new IntParameter("informationOffsetX", -400, 400, 282, h+=offset));
@@ -130,6 +136,11 @@ void setup() {
 
 void draw() {
   background(0);
+  
+  if (canLoseTracking) {
+    canLoseTracking = false;
+    lostTracking = false;
+  }
   
   pushMatrix();
   colorImage = kinect.getVideoImage();
@@ -219,7 +230,10 @@ void draw() {
         p.targetX = productX[i]/productAmount[i];
         p.targetY = productY[i]/productAmount[i];
         p.targetZ = productZ[i]/productAmount[i];
+        canLoseTracking = true;
       
+      } else {
+        lostTracking = true;
       }
       p.renderDebug();
       
@@ -243,6 +257,8 @@ void draw() {
   popStyle();
   
   if (action == "collect_data" || action == "train_model") {
+    newData();
+    
     lineGraph(sensorHist[0], 0, 500, 0, 0, width, height/3, 0); //draw sensor stream
     lineGraph(diffArray[0], 0, 500, 0, height/3, width, height/3, 1); //history of signal
     lineGraph(thldArray[0], 0, 500, 0, height/3, width, height/3, 2); //history of signal
@@ -256,6 +272,12 @@ void draw() {
     showInfo("Num of Data: "+csvData.getRowCount(), 20, 40);
     showInfo("[X]:del/[C]:clear/[S]:save", 20, 60);
     showInfo("[/]:label+", 20, 80);
+    
+    
+    // Draw the linear regressions
+    for (int c = 0; c < sensorNum; c++) {
+      image(pg2[c], c*(width/3), height-(height/3));
+    }
   }
   if (b_saveCSV) {
     saveCSV(dataSetName, csvData);
@@ -295,7 +317,7 @@ void newData() {
   appendArray(thldArray[2], activationThld);
   
   //test activation threshold
-  if (diff>activationThld) {
+  if ((lostTracking == false) && (diff>activationThld)) {
     appendArray(modeArray, 2); //activate when the absolute diff is beyond the activationThld
     if (b_sampling == false) { //if not sampling
       b_sampling = true; //do sampling
@@ -315,9 +337,39 @@ void newData() {
   }
 
   if (b_sampling == true) {
-    appendArray(windowArray[0], rawData[0]); //store the windowed data to history (for visualization)
+    for ( int c = 0; c < sensorNum; c++) {
+      appendArray(windowArray[c], rawData[c]); //store the windowed data to history (for visualization)
+    }
     ++sampleCnt;
     if (sampleCnt == windowSize) {
+      
+      
+      // COLLECT FEATURES
+      for (int c = 0; c < sensorNum; c++) {
+        
+        // Perform linear regression for each time series data 
+        
+        tempCSV = new Table();
+        tempCSV.addColumn("index");
+        tempCSV.addColumn("value");
+        
+        try {
+          initTrainingSet(tempCSV, 2); // in Weka.pde
+          lReg = new LinearRegression();
+          lReg.buildClassifier(training);
+          modelEvaluation(c);
+        }
+        catch (Exception e) {
+          e.printStackTrace();
+        }
+        
+        
+        
+      }
+      
+      
+      
+      
       windowM[0] = Descriptive.mean(windowArray[0]); //mean
       windowSD[0] = Descriptive.std(windowArray[0], true); //standard deviation
       TableRow newRow = csvData.addRow();
@@ -397,7 +449,11 @@ void keyPressed() {
   }
   if (key == '2') {
     // Train model
-    action = "collect_data";
+    if (products.size() > 0) {
+      action = "collect_data";
+    } else {
+      print("You need to select a color\n");
+    }
   }
   if (key == '3') {
     action = "train_model";
