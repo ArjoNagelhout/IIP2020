@@ -91,8 +91,8 @@ float[] sensorMax = new float[sensorNum];
 
 
 void setup() {
-  size(1200, 600, P3D);
-  
+  //size(1200, 600, P3D);
+  fullScreen(P3D);
   initCSV();
   initLinearRegression();
   
@@ -159,9 +159,6 @@ void draw() {
       loadTrainARFF(dataset=dataSetName+".arff");
       
       CSearchLinear(CArray);
-      
-      
-      
       trainLinearSVC(C=currentC);
       setModelDrawing(unit=2);
       evaluateTrainSet(fold=5, isRegression=false, showEvalDetails=true);
@@ -169,45 +166,21 @@ void draw() {
       
       actionChange = false;
     }
-    pushStyle();
     
-    pg_info.beginDraw();
-    pg_info.background(0);
-    pg_info.textFont(monospace);
+    drawCSearch();
     
-    pg_info.textSize(20);
-    pg_info.fill(255);
-    pg_info.textAlign(RIGHT, TOP);
-    pg_info.text("Currently trained model: "+modelName+"\n", width, 0);
-    pg_info.text("From dataset: "+dataSetName+".arff\n", width, 40);
-    pg_info.text("With C="+currentC+"\n", width, 80);
-    pg_info.textSize(10);
-    pg_info.textAlign(LEFT);
-    try {
-      String str = eval.toSummaryString("\nResults\n======\n", false);
-      str += eval.toMatrixString();
-      str += eval.toClassDetailsString();
-      pg_info.text(str, 0, 0);
-    } catch(java.lang.Exception e) {
-      println(e);
-    }
-    pg_info.endDraw();
-    popStyle();
-    
-    image(pg_info, 0,0);
-    
-    int size = 500;
-    drawCSearchModels(width-size, height-size, size, size);
-    drawCSearchResults(width-size, height-size, size, size);
     drawCurrentAction();
     
   } else if (action == "demo") {
+    //println("DEMO");
     if (actionChange) {
       currentProductAmount = 0;
       currentState = 0;
       
       // LOAD MODEL
-      
+      setModelDrawing(unit=2);
+      loadTrainARFF(dataset=dataSetName+".arff");
+      loadModel(model=modelName);
       
       actionChange = false;
     }
@@ -215,6 +188,8 @@ void draw() {
     getKinectData();
     newData();
     demoDraw();
+    //drawCollectionInfo();
+    //productColors.render();
     
   }
 }

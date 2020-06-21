@@ -25,7 +25,7 @@ class Product {
     pushMatrix();
     // Scale up by 200
     translate(currentX*factor, currentY*factor, factor-currentZ*factor);
-    if (debugInfo) {
+    if (debugInfo && action != "demo") {
       fill(c);
       noStroke();
       textSize(2);

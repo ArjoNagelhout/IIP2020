@@ -90,9 +90,8 @@ void getKinectData() {
       } else {
         lostTracking = true;
       }
-      if (action != "demo") {
-        p.renderDebug();
-      }
+      
+      p.renderDebug();
       
         
     }
@@ -191,7 +190,23 @@ void newData() {
       if (action == "demo") {
         // GET PREDICTION
         
-        
+        if (firstTime == false) {
+          float[] X = {(float)windowSlope[0], (float)windowSlope[1], (float)windowSlope[2]};
+          
+          String currentPredictionString = getPrediction(X);
+          
+          if (currentPredictionString.equals("A")) {
+            currentPrediction = 0;
+          } else if (currentPredictionString.equals("B")) {
+            currentPrediction = 1;
+          } else if (currentPredictionString.equals("C")) {
+            currentPrediction = 2;
+          }
+          newIncomingPrediction = true;
+        } else {
+          
+          firstTime = false;
+        }
         
       } else {
         
@@ -205,8 +220,9 @@ void newData() {
         newRow.setString("label", getCharFromInteger(labelIndex));
         println(csvData.getRowCount());
         //saveTable(csvData, "data/test.csv");
-        b_sampling = false; //stop sampling if the counter is equal to the window size
+        
       }
+      b_sampling = false; //stop sampling if the counter is equal to the window size
     }
   }
   return;
