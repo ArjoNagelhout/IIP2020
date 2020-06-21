@@ -7,6 +7,22 @@ void initDemo() {
   tempCSV.addColumn("value");
 }*/
 
+void initLinearRegression() {
+  for (int c = 0; c < sensorNum; c++) {
+    pg2[c] = createGraphics(width/sensorNum, height/3);
+    pg2[c].beginDraw();
+    pg2[c].background(200);
+    pg2[c].endDraw();
+    
+    // Create a new table
+    tempCSV[c] = new Table();
+    tempCSV[c].addColumn("index");
+    tempCSV[c].addColumn("value");
+    
+    saveCSV(tempCSV[c], "data/tempCSV_"+c+".csv");
+  }
+}
+
 void modelEvaluation(int sensor) {
   try {
     double slope = lReg.coefficients()[0];
@@ -53,12 +69,12 @@ double g(float x) {
   return Y;
 }
 
-void saveCSV(Table csvData, String fileName) {
+void saveCSV(Table _csvData, String fileName) {
   //Save the table to the file folder
-  saveTable(csvData, fileName); //save table as CSV file
+  saveTable(_csvData, fileName); //save table as CSV file
   println("Saved as: ", fileName);
   //reset b_saveCSV;
-  b_saveCSV = false;
+  
 }
 
 void drawCSVData(Table _csvData) {

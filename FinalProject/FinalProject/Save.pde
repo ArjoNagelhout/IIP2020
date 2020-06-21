@@ -6,21 +6,23 @@ void initCSV(){
     if (attrIsNominal[i]) csvData.setColumnType(i, Table.STRING);
     else csvData.setColumnType(i, Table.FLOAT);
   }
+  
+  saveTable(csvData, "data/test.csv");
 }
 
 String getCharFromInteger(double i) { //0 = A, 1 = B, and so forth
   return ""+char(min((int)(i+'A'), 90));
 }
 
-void saveCSV(String dataSetName, Table csvData){
+/*void saveCSV(String dataSetName, Table csvData){
   saveTable(csvData, dataPath(dataSetName+".csv")); //save table as CSV file
   println("Saved as: ", dataSetName+".csv");
-}
+}*/
 
-void saveARFF(String dataSetName, Table csvData) {
-  String[] attrNames = csvData.getColumnTitles();
-  int[] attrTypes = csvData.getColumnTypes();
-  int lineCount = 1 + attrNames.length + 1 + (csvData.getRowCount()); //@relation + @attribute + @data + CSV
+void saveARFF(Table _csvData, String dataSetName) {
+  String[] attrNames = _csvData.getColumnTitles();
+  int[] attrTypes = _csvData.getColumnTypes();
+  int lineCount = 1 + attrNames.length + 1 + (_csvData.getRowCount()); //@relation + @attribute + @data + CSV
   String[] text = new String[lineCount];
   text[0] = "@relation "+dataSetName;
   for (int i = 0; i < attrNames.length; i++) {
@@ -28,8 +30,8 @@ void saveARFF(String dataSetName, Table csvData) {
     ArrayList<String> dict = new ArrayList<String>();
     s += "@attribute "+attrNames[i];
     if (attrTypes[i]==0) {
-      for (int j = 0; j < csvData.getRowCount(); j++) {
-        TableRow row = csvData.getRow(j);
+      for (int j = 0; j < _csvData.getRowCount(); j++) {
+        TableRow row = _csvData.getRow(j);
         String l = row.getString(attrNames[i]);
         boolean found = false;
         for (String d : dict) {
@@ -47,9 +49,9 @@ void saveARFF(String dataSetName, Table csvData) {
     text[1+i] = s;
   }
   text[1+attrNames.length] = "@data";
-  for (int i = 0; i < csvData.getRowCount(); i++) {
+  for (int i = 0; i < _csvData.getRowCount(); i++) {
     String s = "";
-    TableRow row = csvData.getRow(i);
+    TableRow row = _csvData.getRow(i);
     for (int j = 0; j < attrNames.length; j++) {
       if (attrTypes[j]==0) s += row.getString(attrNames[j]);
       else s += row.getFloat(attrNames[j]);

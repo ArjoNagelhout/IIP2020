@@ -1,3 +1,35 @@
+void parameterSetup() {
+  // Parameter setup
+  ArrayList<Parameter> parameters = new ArrayList<Parameter>();
+  int h = -10;
+  int offset = 20;
+
+  parameters.add(new IntParameter("minDepth", 0, 2048, 0, h+=offset));
+  parameters.add(new IntParameter("maxDepth", 0, 2048, 716, h+=offset));
+  parameters.add(new IntParameter("minW", 0, kinect.width, 0, h+=offset));
+  parameters.add(new IntParameter("maxW", 0, kinect.width, kinect.width, h+=offset));
+  parameters.add(new IntParameter("minH", 0, kinect.height, 0, h+=offset));
+  parameters.add(new IntParameter("maxH", 0, kinect.height, kinect.height, h+=offset));
+  parameters.add(new IntParameter("xOffset", -100, 100, -45, h+=offset));
+  parameters.add(new IntParameter("yOffset", -100, 100, -18, h+=offset));
+  parameters.add(new IntParameter("zOffset", -100, 100, -35, h+=offset));
+  parameters.add(new FloatParameter("imageScale", 0.2, 2, 0.322, h+=offset));
+  parameters.add(new IntParameter("skip", 1, 8, 2, h+=offset));
+  parameters.add(new IntParameter("xColorOffset", -100, 100, 40, h+=offset));
+  parameters.add(new IntParameter("yColorOffset", -100, 100, -14, h+=offset));
+  parameters.add(new FloatParameter("maxColorDifference", 0, 300, 23, h+=offset));
+  parameters.add(new IntParameter("minColors", 0, 100, 15, h+=offset));
+  parameters.add(new FloatParameter("productSize", 1, 50, 3, h+=offset));
+  parameters.add(new FloatParameter("lerpSpeed", 0.01, 1, 0.9, h+=offset));
+  parameters.add(new IntParameter("dangerHeight", 10, 300, 100, h+=offset));
+  parameters.add(new FloatParameter("panWidth", 10, 400, 267, h+=offset));
+  parameters.add(new IntParameter("informationOffsetX", -400, 400, 282, h+=offset));
+  parameters.add(new IntParameter("informationOffsetY", -400, 400, 248, h+=offset));
+  parameters.add(new IntParameter("panHeight", 0, 500, 280, h+=offset)); 
+  
+  parameterList = new ParameterList(parameters, 400);
+}
+
 class ParameterList {
   
   float animationSpeed = 0.3;

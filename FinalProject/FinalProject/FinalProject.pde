@@ -63,11 +63,14 @@ int sampleCnt = 0; //counter of samples
 float[] windowM = new float[sensorNum]; //mean
 float[] windowSD = new float[sensorNum]; //standard deviation
 
+// FEATURES
+double[] windowSlope = new double[sensorNum];
+
 Table csvData;
 boolean b_saveCSV = false;
 String dataSetName = "ArjoTrain"; 
-String[] attrNames = new String[]{"m_x", "sd_x", "label"};
-boolean[] attrIsNominal = new boolean[]{false, false, true};
+String[] attrNames = new String[]{"slope_x", "slope_y", "slope_z", "label"};
+boolean[] attrIsNominal = new boolean[]{false, false, false, true};
 int labelIndex = 0;
 
 
@@ -77,7 +80,6 @@ float[] depthLookUp = new float[2048];
 
 
 Table[] tempCSV = new Table[sensorNum];
-String fileName = "data/testData.csv";
 boolean b_savetempCSV = false;
 boolean b_train = false;
 boolean b_test = false;
@@ -95,72 +97,24 @@ float[] sensorMax = new float[sensorNum];
 void setup() {
   size(1200, 600, P3D);
   
-  for (int c = 0; c < sensorNum; c++) {
-    pg2[c] = createGraphics(width/sensorNum, height/3);
-    pg2[c].beginDraw();
-    pg2[c].background(200);
-    pg2[c].endDraw();
-    
-    // Create a new table
-    tempCSV[c] = new Table();
-    tempCSV[c].addColumn("index");
-    tempCSV[c].addColumn("value");
-    
-    saveCSV(tempCSV[c], "data/tempCSV_"+c+".csv");
-    
-    print(c);
-  }
+  initCSV();
+  initLinearRegression();
   
-  
-  
-  //fullScreen(P3D);
   kinect = new Kinect(this);
-  
   kinect.enableMirror(true);
-  camera = new Camera();
   kinect.initDepth();
   kinect.initVideo();
   
+  camera = new Camera();
   ortho();
 
-  // Parameter setup
-  ArrayList<Parameter> parameters = new ArrayList<Parameter>();
-  int h = -10;
-  int offset = 20;
-
-  parameters.add(new IntParameter("minDepth", 0, 2048, 0, h+=offset));
-  parameters.add(new IntParameter("maxDepth", 0, 2048, 716, h+=offset));
-  parameters.add(new IntParameter("minW", 0, kinect.width, 0, h+=offset));
-  parameters.add(new IntParameter("maxW", 0, kinect.width, kinect.width, h+=offset));
-  parameters.add(new IntParameter("minH", 0, kinect.height, 0, h+=offset));
-  parameters.add(new IntParameter("maxH", 0, kinect.height, kinect.height, h+=offset));
-  parameters.add(new IntParameter("xOffset", -100, 100, -45, h+=offset));
-  parameters.add(new IntParameter("yOffset", -100, 100, -18, h+=offset));
-  parameters.add(new IntParameter("zOffset", -100, 100, -35, h+=offset));
-  parameters.add(new FloatParameter("imageScale", 0.2, 2, 0.322, h+=offset));
-  parameters.add(new IntParameter("skip", 1, 8, 2, h+=offset));
-  parameters.add(new IntParameter("xColorOffset", -100, 100, 40, h+=offset));
-  parameters.add(new IntParameter("yColorOffset", -100, 100, -14, h+=offset));
-  parameters.add(new FloatParameter("maxColorDifference", 0, 300, 23, h+=offset));
-  parameters.add(new IntParameter("minColors", 0, 100, 15, h+=offset));
-  parameters.add(new FloatParameter("productSize", 1, 50, 3, h+=offset));
-  parameters.add(new FloatParameter("lerpSpeed", 0.01, 1, 0.9, h+=offset));
-  parameters.add(new IntParameter("dangerHeight", 10, 300, 100, h+=offset));
-  parameters.add(new FloatParameter("panWidth", 10, 400, 267, h+=offset));
-  parameters.add(new IntParameter("informationOffsetX", -400, 400, 282, h+=offset));
-  parameters.add(new IntParameter("informationOffsetY", -400, 400, 248, h+=offset));
-  parameters.add(new IntParameter("panHeight", 0, 500, 280, h+=offset)); 
-  
-  parameterList = new ParameterList(parameters, 400);
+  parameterSetup();
   productColors = new ProductColors();
 
   // Lookup table for all possible depth values (0 - 2047)
   for (int i = 0; i < depthLookUp.length; i++) {
     depthLookUp[i] = rawDepthToMeters(i);
   }
-  
-  initCSV();
-  
 }
 
 
@@ -273,8 +227,6 @@ void draw() {
   strokeWeight(1);
 
   popMatrix();
-
-  //translate(0, 0, 200);
   
   if (!productColors.pickColors) {
     parameterList.update();
@@ -296,8 +248,10 @@ void draw() {
     showInfo("Thld: "+activationThld, 20, 2*height/3-20);
     showInfo("([A]:+/[Z]:-)", 20, 2*height/3);
     lineGraph(windowArray[0], 0, 1023, 0, 2*height/3, width, height/3, 3); //history of window
-    showInfo("M: "+nf(windowM[0], 0, 2), 20, 2*height/3-60);
-    showInfo("SD: "+nf(windowSD[0], 0, 2), 20, 2*height/3-40);
+    showInfo("slope_x: "+windowSlope[0], 20, 2*height/3-80);
+    showInfo("slope_y: "+windowSlope[1], 20, 2*height/3-60);
+    showInfo("slope_z: "+windowSlope[2], 20, 2*height/3-40);
+    
     showInfo("Current Label: "+getCharFromInteger(labelIndex), 20, 20);
     showInfo("Num of Data: "+csvData.getRowCount(), 20, 40);
     showInfo("[X]:del/[C]:clear/[S]:save", 20, 60);
@@ -332,13 +286,16 @@ void draw() {
     }
   }
   if (b_saveCSV) {
-    saveCSV(dataSetName, csvData);
-    saveARFF(dataSetName, csvData);
+    print(csvData);
+    try {
+      saveTable(csvData, dataSetName+".csv");
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+    saveARFF(csvData, dataSetName);
     b_saveCSV = false;
   }
   
-  
-
   productColors.render();
   
 }
@@ -418,8 +375,6 @@ void newData() {
           
         }
         
-        
-        
         saveCSV(tempCSV[c], "data/tempCSV_"+c+".csv");
         
         try {
@@ -427,19 +382,22 @@ void newData() {
           lReg = new LinearRegression();
           lReg.buildClassifier(training);
           modelEvaluation(c);
+          windowSlope[c] = lReg.coefficients()[0];
         }
         catch (Exception e) {
           e.printStackTrace();
         }
       }
       
-      windowM[0] = Descriptive.mean(windowArray[0]); //mean
-      windowSD[0] = Descriptive.std(windowArray[0], true); //standard deviation
+      //windowM[0] = Descriptive.mean(windowArray[0]); //mean
+      //windowSD[0] = Descriptive.std(windowArray[0], true); //standard deviation
       TableRow newRow = csvData.addRow();
-      newRow.setFloat("m_x", windowM[0]);
-      newRow.setFloat("sd_x", windowSD[0]);
+      newRow.setFloat("slope_x", (float)windowSlope[0]);
+      newRow.setFloat("slope_y", (float)windowSlope[1]);
+      newRow.setFloat("slope_z", (float)windowSlope[2]);
       newRow.setString("label", getCharFromInteger(labelIndex));
       println(csvData.getRowCount());
+      //saveTable(csvData, "data/test.csv");
       b_sampling = false; //stop sampling if the counter is equal to the window size
     }
   }
