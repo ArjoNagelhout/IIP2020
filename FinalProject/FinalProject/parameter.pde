@@ -1,3 +1,15 @@
+int intParameter(String name) {
+  return ((IntParameter)getParameter(name)).currentValue;
+}
+
+float floatParameter(String name) {
+  return ((FloatParameter)getParameter(name)).currentValue;
+}
+
+Parameter getParameter(String name) {
+  return parameterList.parameters.get(parameterList.indexes.get(name));
+}
+
 void parameterSetup() {
   // Parameter setup
   ArrayList<Parameter> parameters = new ArrayList<Parameter>();
@@ -58,6 +70,8 @@ class ParameterList {
   
   void update() {
     
+    pushStyle();
+    textSize(14);
     float targetX;
     if (offScreen) {
       targetX = minX;
@@ -76,6 +90,7 @@ class ParameterList {
       }
     }
     popMatrix();
+    popStyle();
   }
   
 }

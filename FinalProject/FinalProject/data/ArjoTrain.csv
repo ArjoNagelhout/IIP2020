@@ -1,9 +1,4 @@
-@relation ArjoTrain
-@attribute slope_x numeric
-@attribute slope_y numeric
-@attribute slope_z numeric
-@attribute label {A,B,C}
-@data
+slope_x,slope_y,slope_z,label
 0.3146154,-0.020769231,-0.05923077,A
 2.3192308,0.0,0.36692306,A
 -0.92615384,-0.05,0.0,A

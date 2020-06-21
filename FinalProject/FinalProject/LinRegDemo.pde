@@ -7,6 +7,8 @@ void initDemo() {
   tempCSV.addColumn("value");
 }*/
 
+
+
 void initLinearRegression() {
   for (int c = 0; c < sensorNum; c++) {
     pg2[c] = createGraphics(width/sensorNum, height/3);
@@ -33,8 +35,7 @@ void modelEvaluation(int sensor) {
     Evaluation eval = new Evaluation(training);
     eval.crossValidateModel(lReg, training, 10, new Random(1)); //10-fold cross validation
     weka.core.SerializationHelper.write(dataPath("lReg.model"), lReg);
-    b_train = false;
-    b_test = true;
+    
     pg2[sensor] = get2DRegLine(pg2[sensor], (Classifier)lReg, training);
     
     println(eval.toSummaryString("\nResults\n======\n", false));

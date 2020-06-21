@@ -68,12 +68,15 @@ class ProductColors {
   
   void render() {
     
-    if (parameterList.offScreen) {
+    /*if (parameterList.offScreen) {
       return;
-    }
+    }*/
     
     int yy = y;
     int offset = 20;
+    
+    pushStyle();
+    textSize(14);
     
     fill(255);
     text("currentColor = "+currentColor, width/2, yy-=offset);
@@ -92,7 +95,7 @@ class ProductColors {
       }
       
     }
-    
+    popStyle();
   }
   
 }

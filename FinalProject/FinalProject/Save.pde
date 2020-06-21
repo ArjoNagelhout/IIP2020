@@ -1,3 +1,13 @@
+//Append a value to a float[] array.
+float[] appendArray (float[] _array, float _val) {
+  float[] array = _array;
+  float[] tempArray = new float[_array.length-1];
+  arrayCopy(array, tempArray, tempArray.length);
+  array[0] = _val;
+  arrayCopy(tempArray, 0, array, 1, tempArray.length);
+  return array;
+}
+
 void initCSV(){
   //Initiate the dataList and set the header of table
   csvData = new Table();

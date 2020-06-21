@@ -1,3 +1,59 @@
+void drawCurrentAction() {
+  pushStyle();
+  fill(255);
+  textSize(30);
+  text(action, width/2, height/2);
+  popStyle();
+}
+
+
+// Draw info
+void drawCollectionInfo() {
+  lineGraph(sensorHist[0], 0, 500, 0, 0, width, height/3, 0); //draw sensor stream
+  lineGraph(diffArray[0], 0, 500, 0, height/3, width, height/3, 1); //history of signal
+  lineGraph(thldArray[0], 0, 500, 0, height/3, width, height/3, 2); //history of signal
+  barGraph (modeArray, 0, height/3, width, height/3);
+  showInfo("Thld: "+activationThld, 20, 2*height/3-20);
+  showInfo("([A]:+/[Z]:-)", 20, 2*height/3);
+  lineGraph(windowArray[0], 0, 1023, 0, 2*height/3, width, height/3, 3); //history of window
+  showInfo("slope_x: "+windowSlope[0], 20, 2*height/3-80);
+  showInfo("slope_y: "+windowSlope[1], 20, 2*height/3-60);
+  showInfo("slope_z: "+windowSlope[2], 20, 2*height/3-40);
+  
+  showInfo("Current Label: "+getCharFromInteger(labelIndex), 20, 20);
+  showInfo("Num of Data: "+csvData.getRowCount(), 20, 40);
+  showInfo("[X]:del/[C]:clear/[S]:save", 20, 60);
+  showInfo("[/]:label+", 20, 80);
+  
+  
+  // Draw the linear regressions
+  for (int c = 0; c < sensorNum; c++) { 
+    if (pg2[c] != null) {
+      image(pg2[c], c*(width/sensorNum), height-(height/3));
+    }
+    pushMatrix();
+    translate(c*(width/sensorNum), height-(height/3));
+    
+    pushStyle();
+    stroke(255, 0, 0);
+    strokeWeight(5);
+    
+    int _sampleCount = tempCSV[c].getRowCount();
+    if (_sampleCount > 0) {
+      int xMultiplier = (width/sensorNum)/_sampleCount;
+      
+      for (int i = 0; i < _sampleCount; i++) { 
+        TableRow tableRow = tempCSV[c].getRow(i);
+        
+        point(tableRow.getInt("index") * xMultiplier, map(tableRow.getFloat("value"), sensorMin[c], sensorMax[c], 0, height/3));
+      }
+    }
+    
+    popMatrix();
+    popStyle();
+  }
+}
+
 //Draw text info
 //showInfo(String s, int v, float x, float y)
 void showInfo(String s, float x, float y) { 
